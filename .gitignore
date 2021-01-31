@@ -1,0 +1,18 @@
+venv/
+
+*.pyc
+.cache*
+
+#IDE (PyCharm)
+.idea/
+
+# OS (Mac OS)
+.DS_Store
+
+# Credentials
+credentials.*
+token*
+
+# Misc info
+recipients.txt
+prediction_log.txt
