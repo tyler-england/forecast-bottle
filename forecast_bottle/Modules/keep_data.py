@@ -1,16 +1,16 @@
-import gkeepapi, os
+import gkeepapi
 from pathlib import Path
 
 
 def get_content():
-    folder = Path(os.path.dirname(os.getcwd()))
-    folder = str(folder)#.parent)
+    folder = Path(__file__).parents[2]
+    folder = str(folder)
     cred_doc_path = folder + "/credentials.txt"  # change as necessary
 
     try:
         logindoc = open(cred_doc_path, "r")
     except Exception:
-        return "Error: Unable to find/open credentials doc. (" + cred_doc_path + ")"
+        return "Error: Unable to find/open credentials doc (" + cred_doc_path + ")"
 
     info = [line.rstrip() for line in logindoc]
 
@@ -37,3 +37,7 @@ def get_content():
     content = content.split("\n")[2:]  # remove header, organize as list
 
     return content
+
+
+x = get_content()
+print(x)

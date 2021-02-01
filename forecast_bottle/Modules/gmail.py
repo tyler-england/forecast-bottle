@@ -1,10 +1,10 @@
-import smtplib, ssl, os
+import smtplib, ssl
 from pathlib import Path
 from email.mime.text import MIMEText
 
 
 def send_email(time, qty):
-    folder = Path(os.path.dirname(os.getcwd()))
+    folder = Path(__file__).parents[2]
     folder = str(folder)
 
     doc_path = folder + "/credentials.txt"  # credentials doc (change as necessary)
