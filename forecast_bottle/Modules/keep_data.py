@@ -39,5 +39,7 @@ def get_content():
     return content
 
 
-x = get_content()
-print(x)
+x = "['Jan 30 - 12:00 am, 90 mL', 'Jan 30 - 2:30 am, 50 mL', 'Jan 30 - 4:45 am, 40 mL', 'Jan 30 - 6:15 am, 60 mL + 3 min BF', 'Jan 30 - 9:00 am, 60 mL + 1 min BF', 'Jan 30 - 11:45 am, 22 min BF', 'Jan 30 - 1:30 pm, 20 mL', 'Jan 30 - 3:40 pm, 70 mL + 10 min BF', 'Jan 30 - 5:50 pm, 90 mL', 'Jan 30 - 8:15 pm, 60 mL + 5 min BF', 'Jan 30 - 9:45 pm, 70 mL', '', 'Jan 31 - 12:05 am, 50 mL', 'Jan 31 - 1:35 am, 70 mL', 'Jan 31 - 3:50 am, 30 mL', 'Jan 31 - 6:05 am, 50 mL + 8 min BF', 'Jan 31 - 8:45 am, 60 mL', 'Jan 31 - 10:30 am, 30 mL', 'Jan 31 - 11:40 am, 60 mL + 6 min BF', 'Jan 31 - 1:35 pm, 60 mL + 11 min BF', 'Jan 31 - 4:30 pm, 90 mL', 'Jan 31 - 7:35 pm, 90 mL + 3 min BF', 'Jan 31 - 9:45 pm, 80 mL', '', 'Feb 1 - 12:45 am, 90 mL', 'Feb 1 - 4:10 am, 100 mL', 'Feb 1 - 6:45 am, 90 mL + 5 min BF', 'Feb 1 - 9:30 am, 90 mL', 'Feb 1 - 11:45 am, 90 mL', 'Feb 1 - 1:50 pm, 26 min BF', 'Feb 1 - 3:00 pm, 60 mL', 'Feb 1 - 6:00 pm, 70 mL', 'Feb 1 - 8:45 pm, 100 mL', 'Feb 1 - 11:40 pm, 70 mL', '', 'Feb 2 - 1:40 am, 75 mL', 'Feb 2 - 3:00 am, 20 mL', 'Feb 2 - 5:10 am, 70 mL', 'Feb 2 - 6:50 am, 50 mL', 'Feb 2 - 8:40 am, 30 mL', 'Feb 2 - 10:50 am, 80 mL', 'Feb 2 - 12:20 pm, 70 mL', 'Feb 2 - 2:50 pm, 80 mL', 'Feb 2 - 4:15pm, 60 mL', 'Feb 2 - 5:50 pm, 60 mL ', 'Feb 2 - 7:45 pm, 70 mL', 'Feb 2 - 9:25 pm, 50 mL', '', 'Feb 3 - 12:05 am, 90 mL', 'Feb 3 - 2:15 am, 80 mL', 'Feb 3 - 3:45 am, 50 mL', 'Feb 3 - 4:55 am, 40 mL', 'Feb 3 - 6:45 am, 70 mL', 'Feb 3 - 9:50 am, 70 mL', 'Feb 3 - 12:00 pm, 90 mL', '', '']"
+
+y = x.replace("'", "\"")
+print(y)
