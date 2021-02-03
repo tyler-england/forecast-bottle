@@ -30,22 +30,14 @@ def send_email(time, qty):
     if un == "" or pw == "":
         return "Error: username/password info missing"
 
-    recipients = ""
-    for recip in recips:
-        if recip.find("@") > 0:  # skip empty lines, notes, etc.
-            if recipients == "":
-                recipients = recip
-            else:
-                recipients = recipients + "," + recip
-
-    time_adj= time.strftime("%b %d, %H:%M%p")
+    time_adj = time.strftime("%b %d, %H:%M%p")
     body_text = "Approx. next feed: {time}".format(time=time_adj)
     body_text = body_text + "\n\nApprox. amount required: {qty} mL".format(qty=qty)
 
     msg = MIMEText(body_text, "plain")
     msg['Subject'] = "Corwin's Feed Schedule"
     msg['From'] = "Tyler England"
-    msg['To'] = recipients
+    msg['To'] = ",".join(recips)
 
     port = 465  # For SSL
     smtp_server = "smtp.gmail.com"
@@ -53,7 +45,7 @@ def send_email(time, qty):
     try:
         with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
             server.login(un, pw)
-            server.sendmail(un, recipients, msg.as_string())
+            server.sendmail(un, recips, msg.as_string())
         return
     except Exception:
         return "Error: Unable to send email"
