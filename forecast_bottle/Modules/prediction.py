@@ -85,7 +85,7 @@ def get_time_qty(data):
             bf_ml_per_min = x
     if bf_ml_per_min < 0:  # something went wrong -- should only happen if daily intake is wildly off for one day
         bf_ml_per_min = bf_est
-    bf_ml_per_min=0 #for this case, breastfeeds are confounding --- he's bad at breastfeeding
+    bf_ml_per_min = 0  # for this case, breastfeeds are confounding --- he's bad at breastfeeding
 
     # find next hunger time
     fmt = "%Y-%m-%d"
@@ -129,6 +129,7 @@ def get_time_qty(data):
         delta_adj.append(delta[i] / mls_prop[i])
 
     avg_time_prop = sum(delta_adj, delta_adj[0]) / len(delta_adj)  # avg time until next feed is started
+    avg_time_prop=(delta_adj[0]+delta_adj[1]+delta_adj[2])/3 # avg time until next feed is started
     time_out = dttarget + avg_time_prop
 
     # find qty expected to be requred at time_out --> at target time, compare last few days
@@ -197,4 +198,6 @@ def get_time_qty(data):
     # time_out is a datetime object
     # qty_out is an integer (multiple of 10)
     return time_out, qty_out
+
+
 
