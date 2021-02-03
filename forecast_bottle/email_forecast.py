@@ -4,11 +4,12 @@ import os, datetime
 data = keep_data.get_content()  # get historical feed data from Google Keep
 
 time, qty = prediction.get_time_qty(data)
-if time==0 or qty==0:
-    print("Failed to predict time/qty")
+
+if time == 0 or qty == 0:
+    print("Failed to predict time/qty: " + str(time) + "   " + str(qty))
     quit()
 if time < datetime.datetime.now():  # no longer useful to notify
-    print("Prediction ran too late :(")
+    print("Prediction found too late :(")
     quit()
 
 log = os.path.dirname(os.getcwd()) + "/prediction_log.txt"  # if already logged, don't send
@@ -27,6 +28,6 @@ for logline in loglines:
 x = gmail.send_email(time, qty)  # create & send email
 if x is None:  # add to log
     logdoc = open(log, "a+")
-    logdoc.write(chkstr)
+    logdoc.write("\n" + chkstr)
 else:
     print(x)
