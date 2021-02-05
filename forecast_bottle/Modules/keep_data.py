@@ -35,5 +35,24 @@ def get_content():
     note = keep.get(note_id)
     content = note.text
     content = content.split("\n")[2:]  # remove header, organize as list
+    content = [i.strip() for i in content]
+
+    # back up data in case of Keep clearout
+    backup = str(Path(__file__).parents[2]) + "/data_log.txt"  # data backup
+    data_new = []
+    try:
+        with open(backup, "r+") as datadoc:
+            data_ex = [line.rstrip() for line in datadoc]
+            for item in content:
+                if item not in data_ex:
+                    print(item)
+                    data_new.append(item)
+            i = len(data_new)
+            if i > 0:  # add to the data doc
+                datadoc.read()
+                for j in range(i):
+                    datadoc.write("\n" + data_new[j])
+    except Exception:
+        print("Error: Unable to backup data to log (" + backup + ")")
 
     return content

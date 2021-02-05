@@ -2,9 +2,9 @@ import pandas as pd
 from datetime import date, datetime, timedelta
 
 
-def get_time_qty(data):
-    time_out = 0
-    qty_out = 0
+def get_time_qty_summary(data):
+    time_next = 0
+    qty_next = 0
     num_days = 3
     today = datetime.today()
     year = today.year  # conditional based on cur month
@@ -76,16 +76,31 @@ def get_time_qty(data):
     if len(mls_daily) < 2:  # can't interpolate -> assume breast output rate
         bf_ml_per_min = bf_est
     else:  # set them equal & approximate the BF content
-        x = (mls_daily[0] - mls_daily[1]) / (bfs_daily[1] - bfs_daily[0])
-        if len(mls_daily) == 3:  # use the third metric and then average
-            y = (mls_daily[1] - mls_daily[2]) / (bfs_daily[2] - bfs_daily[1])
-            z = (mls_daily[0] - mls_daily[2]) / (bfs_daily[2] - bfs_daily[0])
-            bf_ml_per_min = (x + y + z) / 3
+        x = y = z = 0
+        if bfs_daily[0] > 0 or bfs_daily[1] > 0:
+            x = (mls_daily[0] - mls_daily[1]) / bfs_daily[1] - bfs_daily[0]
+        if len(mls_daily) == 3:  # use the third metric and (average if multiple results)
+            if bfs_daily[1] > 0 or bfs_daily[2] > 0:
+                y = (mls_daily[1] - mls_daily[2]) / (bfs_daily[2] - bfs_daily[1])
+            if bfs_daily[2] > 0 or bfs_daily[0] > 0:
+                z = (mls_daily[0] - mls_daily[2]) / (bfs_daily[2] - bfs_daily[0])
+        ls_av = [x, y, z]  # temp to find nonzeros
+        ls_avg = []  # tool to easily average unknown qty of numbers
+        for i in ls_av:
+            if i > 0:
+                ls_avg.append(i)
+        if len(ls_avg) == 0:
+            bf_ml_per_min = 0
         else:
-            bf_ml_per_min = x
+            bf_ml_per_min = sum(ls_avg) / len(ls_avg)
     if bf_ml_per_min < 0:  # something went wrong -- should only happen if daily intake is wildly off for one day
         bf_ml_per_min = bf_est
-    bf_ml_per_min = 0  # for this case, breastfeeds are confounding --- he's bad at breastfeeding
+    mls_tot = []  # for calculating total daily intake
+    for i in range(len(mls_daily)):
+        mls_tot.append(mls_daily[i] + (bfs_daily[i] * bf_ml_per_min))
+    info_daily_tot = "???"  # default if nothing was found
+    if len(mls_tot) > 0:
+        info_daily_tot = sum(mls_tot) / len(mls_tot)
 
     # find next hunger time
     fmt = "%Y-%m-%d"
@@ -93,14 +108,16 @@ def get_time_qty(data):
     dtarget2 = datetime.strftime(today, fmt)  # latest day to consider
     ttarget = df.tail(1).iloc[0, 1]  # time to consider
     fmt = fmt + " %H:%M:%S"
-    dttarget = datetime.strptime(df.tail(1).iloc[0, 0] + " " + df.tail(1).iloc[0, 1], fmt)  # datetime of last feed
+    info_last = datetime.strptime(df.tail(1).iloc[0, 0] + " " + df.tail(1).iloc[0, 1], fmt)  # datetime of last feed
     last_few_days = df.set_index("Date").truncate(before=dtarget1, after=dtarget2)  # crop df to relevant rows
     last_few_days["BF mL"] = last_few_days["BF Mins"] * bf_ml_per_min  # add in mL for breastfeeds
     mlstarget = last_few_days.tail(1).iloc[0, 1] + last_few_days.tail(1).iloc[0, 3]  # mLs consumed at latest feed
     last_few_days = last_few_days.reset_index()
     t_diff = pd.to_datetime(last_few_days["Time"]) - pd.to_datetime(ttarget)  # check past days at similar time
     closest_times = t_diff.abs().groupby(last_few_days["Date"]).idxmin()  # closest time each past day
-    closest_times = closest_times.truncate(after=closest_times.index[len(closest_times.index) - 2])  # don't count today
+    if len(closest_times) > 3:  # includes current day
+        closest_times = closest_times.truncate(
+            after=closest_times.index[len(closest_times.index) - 1])  # don't count today
     day_indices = []  # indices of times we want to look at over last 3 days
     fmt = "%H:%M:%S"
 
@@ -116,33 +133,49 @@ def get_time_qty(data):
         else:
             day_indices.append(closest_times.iloc[i])
 
-    delta = []  # for each index, see how long it took before next feed (proportional adj)
+    delta = []  # for each index, see how long it took before next feed
     mls_prop = []  # for each index, ratio of milk (in mLs) at that feed to mLs in recent feed
     delta_adj = []  # theoretical 'next feed' based on each delta & mls_prop
     fmt = "%Y-%m-%d " + fmt  # include date (not only time)
-    for i in range(3):
-        t1 = datetime.strptime(last_few_days.iloc[day_indices[i], 0] + " " + last_few_days.iloc[day_indices[i], 1], fmt)
-        t2 = datetime.strptime(
-            last_few_days.iloc[day_indices[i] + 1, 0] + " " + last_few_days.iloc[day_indices[i] + 1, 1], fmt)
-        delta.append(t2 - t1)
-        mls_prop.append((last_few_days.iloc[day_indices[i], 2] + last_few_days.iloc[day_indices[i], 4]) / mlstarget)
-        delta_adj.append(delta[i] / mls_prop[i])
 
-    avg_time_prop = sum(delta_adj, delta_adj[0]) / len(delta_adj)  # avg time until next feed is started
-    avg_time_prop=(delta_adj[0]+delta_adj[1]+delta_adj[2])/3 # avg time until next feed is started
-    time_out = dttarget + avg_time_prop
+    for i in range(3):
+        try:  # will fail on last iteration if new day AND no feed yet
+            t1 = datetime.strptime(last_few_days.iloc[day_indices[i], 0] + " " + last_few_days.iloc[day_indices[i], 1],
+                                   fmt)
+            t2 = datetime.strptime(
+                last_few_days.iloc[day_indices[i] + 1, 0] + " " + last_few_days.iloc[day_indices[i] + 1, 1], fmt)
+        except Exception:  # use previous time gap
+            t1 = datetime.strptime(
+                last_few_days.iloc[day_indices[i] - 1, 0] + " " + last_few_days.iloc[day_indices[i] - 1, 1],
+                fmt)
+            t2 = datetime.strptime(
+                last_few_days.iloc[day_indices[i], 0] + " " + last_few_days.iloc[day_indices[i], 1], fmt)
+        delta.append(t2 - t1)
+        x = (last_few_days.iloc[day_indices[i], 2] + last_few_days.iloc[day_indices[i], 4]) / mlstarget
+        x = max(x, .625)  # may be comparing to unusually low amount from prior day(s)
+        mls_prop.append(x)
+        try:
+            delta_adj.append(delta[i] / mls_prop[i])
+        except Exception:
+            delta_adj.append(delta[i])
+
+    avg_time_prop = (delta_adj[0] + delta_adj[1] + delta_adj[2]) / len(delta_adj)  # avg time until next feed is started
+    time_next = info_last + avg_time_prop
 
     # find qty expected to be requred at time_out --> at target time, compare last few days
-    fmt = "%H:%M:%S"
-    ttarget = datetime.strftime(time_out, fmt)  # time to consider
+    fmt = "%Y-%m-%d"
     dtarget1 = datetime.strftime(today - timedelta(days=num_days + 1), fmt)  # first day to consider
+    fmt = "%H:%M:%S"
+    ttarget = datetime.strftime(time_next, fmt)  # time to consider
     last_few_days = df.set_index("Date").truncate(before=dtarget1, after=dtarget2)  # crop df to relevant rows
     last_few_days["BF mL"] = last_few_days["BF Mins"] * bf_ml_per_min  # add in mL for breastfeeds
     last_few_days = last_few_days.reset_index()
     t_diff = pd.to_datetime(last_few_days["Time"]) - pd.to_datetime(ttarget)  # check past days at similar time
     closest_times = t_diff.abs().groupby(last_few_days["Date"]).idxmin()  # closest time each past day
-    closest_times = closest_times.truncate(before=closest_times.index[1],
-                                           after=closest_times.index[len(closest_times.index) - 2])  # don't count today
+    closest_times = closest_times.truncate(before=closest_times.index[1])  # remove '4th day back'
+    if len(closest_times) > 3:  # don't count today
+        closest_times = closest_times.truncate(
+            after=closest_times.index[len(closest_times.index) - 2])
 
     day_indices = []  # indices of times we want to look at over last 3 days
     for i in range(num_days):  # compare each against last index (result can vary depending on midnight switch)
@@ -157,7 +190,7 @@ def get_time_qty(data):
         else:
             day_indices.append(closest_times.iloc[i])
 
-    hrs_lag = 6  # use total consumption over past 6 hours (for now...)
+    hrs_lag = 10  # use total consumption over past [hrs_lag] hours
     closest_back = []  # first index in the hrs_lag preceding the closest time (one extra index)
     fmt = "%Y-%m-%d " + fmt
     for i in range(len(day_indices) + 1):  # see past qtys & approximate next qty to match total
@@ -167,7 +200,7 @@ def get_time_qty(data):
             dtarget2 = dtarget1 - timedelta(hours=hrs_lag)
         else:  # current time slot (find total up until next feed)
             j = len(last_few_days)
-            dtarget1 = time_out
+            dtarget1 = time_next
             dtarget2 = dtarget1 - timedelta(hours=hrs_lag)
         while dtarget1 > dtarget2:
             j -= 1
@@ -189,15 +222,23 @@ def get_time_qty(data):
     avg_mls = (mls_tot[0] + mls_tot[1] + mls_tot[2]) / 3  # mLs for the hrs_lag period])
     x = avg_mls - mls_tot[len(mls_tot) - 1]
     if x < 0:
-        qty_out = 0
+        qty_next = 0
     else:
         while int(x) % 10 > 0:
             x += 1
-        qty_out = int(x)
+        qty_next = int(x)
 
-    # time_out is a datetime object
-    # qty_out is an integer (multiple of 10)
-    return time_out, qty_out
+    # find avg frequency of feeds
+    t_delta = []
+    for i in range(len(last_few_days) - 1):
+        t1 = datetime.strptime(last_few_days.iloc[i, 0] + " " + last_few_days.iloc[i, 1], fmt)
+        t2 = datetime.strptime(last_few_days.iloc[i + 1, 0] + " " + last_few_days.iloc[i + 1, 1], fmt)
+        t_delta.append(t2 - t1)
+    info_freq = sum(t_delta, timedelta()) / len(t_delta)
 
-
-
+    # time_next is a datetime object
+    # qty_next is an integer (multiple of 10)
+    # info_last is a datetime object
+    # info_daily_tot is integer/float
+    # info_freq is a time
+    return time_next, qty_next, info_last, info_daily_tot, info_freq

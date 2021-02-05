@@ -3,7 +3,7 @@ from pathlib import Path
 from email.mime.text import MIMEText
 
 
-def send_email(time, qty):
+def send_email(time, qty, last_feed, daily_tot, daily_freq):
     folder = Path(__file__).parents[2]
     folder = str(folder)
 
@@ -30,9 +30,21 @@ def send_email(time, qty):
     if un == "" or pw == "":
         return "Error: username/password info missing"
 
-    time_adj = time.strftime("%b %d, %H:%M%p")
-    body_text = "Approx. next feed: {time}".format(time=time_adj)
-    body_text = body_text + "\n\nApprox. amount required: {qty} mL".format(qty=qty)
+    time_adj = time.strftime("%b %d, %I:%M %p")
+    last_feed_adj = last_feed.strftime("%b %d, %I:%M %p")
+    daily_tot_adj = int(daily_tot)
+    t_delta = str(daily_freq).split(":")
+    if t_delta[2].find(".") > 0:
+        x = t_delta[2].find(".")
+        t_delta[2] = t_delta[2][:x]
+    daily_freq_adj = t_delta[0] + " hrs  " + t_delta[1] + " min  " + t_delta[2] + " sec"
+    body_text = "ESTIMATES"
+    body_text = body_text + "\n\nNext feed: {time}".format(time=time_adj)
+    body_text = body_text + "\n\nAmount: {qty} mL".format(qty=qty)
+    body_text = body_text + "\n\n\nPAST DATA"
+    body_text = body_text + "\n\nLast feed\n{last_feed}".format(last_feed=last_feed_adj)
+    body_text = body_text + "\n\nAvg daily total\n{daily_tot} mL".format(daily_tot=daily_tot_adj)
+    body_text = body_text + "\n\nAvg time between feeds\n{daily_freq}".format(daily_freq=daily_freq_adj)
 
     msg = MIMEText(body_text, "plain")
     msg['Subject'] = "Corwin's Feed Schedule"
