@@ -3,7 +3,7 @@ from pathlib import Path
 from email.mime.text import MIMEText
 
 
-def send_email(time, qty, last_feed, daily_tot, daily_freq):
+def send_email(time, qty, last_feed, avg_feed, daily_tot, daily_freq):
     folder = Path(__file__).parents[2]
     folder = str(folder)
 
@@ -43,7 +43,8 @@ def send_email(time, qty, last_feed, daily_tot, daily_freq):
     body_text = body_text + "\n\nAmount: {qty} mL".format(qty=qty)
     body_text = body_text + "\n\n\nPAST DATA"
     body_text = body_text + "\n\nLast feed\n{last_feed}".format(last_feed=last_feed_adj)
-    body_text = body_text + "\n\nAvg daily total\n{daily_tot} mL".format(daily_tot=daily_tot_adj)
+    body_text = body_text + "\n\nAvg milk amounts\nday: {daily_tot} mL  |  feed: {avg_feed} mL".format(
+        daily_tot=daily_tot_adj, avg_feed=avg_feed)
     body_text = body_text + "\n\nAvg time between feeds\n{daily_freq}".format(daily_freq=daily_freq_adj)
 
     msg = MIMEText(body_text, "plain")

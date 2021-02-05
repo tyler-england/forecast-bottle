@@ -72,6 +72,7 @@ def get_time_qty_summary(data):
         if x > 0 or y > 0:
             mls_daily.append(x)
             bfs_daily.append(y)
+
     bf_est = 5.3
     if len(mls_daily) < 2:  # can't interpolate -> assume breast output rate
         bf_ml_per_min = bf_est
@@ -220,6 +221,7 @@ def get_time_qty_summary(data):
         mls_tot.append(int(x))
 
     avg_mls = (mls_tot[0] + mls_tot[1] + mls_tot[2]) / 3  # mLs for the hrs_lag period])
+
     x = avg_mls - mls_tot[len(mls_tot) - 1]
     if x < 0:
         qty_next = 0
@@ -227,6 +229,11 @@ def get_time_qty_summary(data):
         while int(x) % 10 > 0:
             x += 1
         qty_next = int(x)
+
+    # find avg feed size
+    info_avg = last_few_days.groupby("Date")["mLs Tot"].mean()  # grouped avgs of mLs
+    info_avg = sum(info_avg) / len(info_avg)
+    info_avg = int(info_avg)
 
     # find avg frequency of feeds
     t_delta = []
@@ -241,4 +248,4 @@ def get_time_qty_summary(data):
     # info_last is a datetime object
     # info_daily_tot is integer/float
     # info_freq is a time
-    return time_next, qty_next, info_last, info_daily_tot, info_freq
+    return time_next, qty_next, info_last, info_avg, info_daily_tot, info_freq

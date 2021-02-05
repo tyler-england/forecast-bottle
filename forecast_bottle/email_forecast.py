@@ -4,7 +4,7 @@ import datetime
 
 data = keep_data.get_content()  # get historical feed data from Google Keep
 
-time, qty, last_feed, daily_tot, daily_freq = prediction.get_time_qty_summary(data)
+time, qty, last_feed, avg_feed, daily_tot, daily_freq = prediction.get_time_qty_summary(data)
 
 if time == 0 or qty == 0:
     print("Failed to predict time/qty: " + str(time) + "   " + str(qty))
@@ -27,10 +27,10 @@ except Exception:
     print("Error: Unable to find/open the prediction log (" + log + ")")
     quit()
 
-x = gmail.send_email(time, qty, last_feed, daily_tot, daily_freq)  # create & send email
+x = gmail.send_email(time, qty, last_feed, avg_feed, daily_tot, daily_freq)  # create & send email
 if x is None:  # add to log
     with open(log, "w+") as logdoc:
-        for i in range(max(len(loglines)-6,0),len(loglines)):
-            logdoc.write(loglines[i]+"\n")
+        for i in range(max(len(loglines) - 6, 0), len(loglines)):
+            logdoc.write(loglines[i] + "\n")
 else:
     print(x)
