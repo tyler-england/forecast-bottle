@@ -2,7 +2,7 @@ import gkeepapi
 from pathlib import Path
 
 
-def get_content():
+def get_content(name):
     folder = Path(__file__).parents[2]
     folder = str(folder)
     cred_doc_path = folder + "/credentials.txt"  # change as necessary
@@ -43,13 +43,20 @@ def get_content():
     try:
         with open(backup, "r+") as datadoc:
             data_ex = [line.rstrip() for line in datadoc]
+            for item in data_ex:
+                if item.find(name)>-1 or item=="":
+                    pass
+                elif item in content or item.find("--") > -1:  # transfer as is
+                    data_new.append(item)
+                else:  # transfer with -- to show that it's been deleted from Keep doc
+                    data_new.append("--" + item)
             for item in content:
                 if item not in data_ex:
-                    print(item)
                     data_new.append(item)
             i = len(data_new)
             if i > 0:  # add to the data doc
-                datadoc.read()
+                datadoc.truncate(0)
+                datadoc.write(name+"'s Feed History\n")
                 for j in range(i):
                     datadoc.write("\n" + data_new[j])
     except Exception:

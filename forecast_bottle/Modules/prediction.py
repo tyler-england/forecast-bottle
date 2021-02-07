@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import date, datetime, timedelta
+from pathlib import Path
 
 
 def get_time_qty_summary(data):
@@ -162,6 +163,56 @@ def get_time_qty_summary(data):
 
     avg_time_prop = (delta_adj[0] + delta_adj[1] + delta_adj[2]) / len(delta_adj)  # avg time until next feed is started
     time_next = info_last + avg_time_prop
+    time_max = info_last + timedelta(0, 0, 0, 0, 45, 3)  # 4 hours max between feedings
+    if time_next > time_max:
+        time_next = time_max
+
+    age_lines = []  # check time difference against recommended standard
+    feed = []
+    freqs = []
+    age = str(Path(__file__).parents[2]) + "/age_info.txt"  # find birthday_doc
+    try:
+        with open(age, "r") as agedoc:
+            age_lines = [line.rstrip() for line in agedoc]
+    except Exception:
+        print("Error: Unable to find the age doc (" + age + ")")
+    if len(age_lines) > 0:
+        try:
+            x = age_lines[0].find(" ") + 1
+            birthday = datetime.strptime(age_lines[0][x:].strip(), "%Y-%m-%d")
+            num_wks = (today - birthday).days // 7  # double // --> rounds results down to nearest int
+            # i = 0
+            # while not age_lines[i][:1].isnumeric():
+            #     i += 1
+            # age_lines = age_lines[i:]  # remove the header info -- keep only the numeric data
+            for i in age_lines:
+                try:
+                    recs = i.split(",")
+                    if int(recs[0]) <= num_wks <= int(recs[1]):  # correct line for current age
+                        feed.append(int(recs[2]))
+                        feed.append(int(recs[3]))
+                        if len(recs) > 3:
+                            freqs.append(int(recs[4]))
+                            freqs.append(int(recs[5]))
+                        break  # exit for loop
+                except Exception:  # birthday line, header line, etc.
+                    pass
+            if freqs:  # min & max were found --> evaluate time_next
+                x = 0
+                while (time_next - info_last).seconds // 3600 < freqs[
+                    0]:  # increase time_next until hrs eclipse minimum diff
+                    time_next = time_next + timedelta(0, 0, 0, 0, 15)
+                    x += 1
+                    if x > 100:
+                        break
+                while (time_next - info_last).seconds / 3600 > freqs[
+                    1]:  # decrease time_next until hrs are under maximum diff
+                    time_next = time_next - timedelta(0, 0, 0, 0, 15)
+                    x += 1
+                    if x > 200:
+                        break
+        except Exception:
+            pass
 
     # find qty expected to be requred at time_out --> at target time, compare last few days
     fmt = "%Y-%m-%d"
@@ -223,10 +274,24 @@ def get_time_qty_summary(data):
     avg_mls = (mls_tot[0] + mls_tot[1] + mls_tot[2]) / 3  # mLs for the hrs_lag period])
 
     x = avg_mls - mls_tot[len(mls_tot) - 1]
-    if x < 0:
+    if x < 0:  # low amount from past day may be dragging down avg
+        x = max(mls_tot) - mls_tot[len(mls_tot) - 1]
+    if x < 0:  # enough food was eaten already for this entire period
         qty_next = 0
+        print("Program says no food will be needed... mls_tot: " + str(mls_tot))
     else:
-        while int(x) % 10 > 0:
+        # default values
+        feed_min = 60
+        feed_max = 180
+        if len(age_lines) > 0:  # set min/max based on age
+            if feed:  # min/max were found
+                feed_min = feed[0]
+                feed_max = feed[1]
+        while x < feed_min:  # bring up to at least minimum
+            x += 10
+        while x > feed_max:  # bring down to the max amount
+            x -= 10
+        while int(x) % 10 > 0:  # easier to measure into a bottle
             x += 1
         qty_next = int(x)
 
@@ -234,6 +299,11 @@ def get_time_qty_summary(data):
     info_avg = last_few_days.groupby("Date")["mLs Tot"].mean()  # grouped avgs of mLs
     info_avg = sum(info_avg) / len(info_avg)
     info_avg = int(info_avg)
+    if qty_next == 0:  # use average feed size
+        if feed:  # min/max for age were found
+            qty_next = max(info_avg, feed[1])
+        else:
+            qty_next = info_avg
 
     # find avg frequency of feeds
     t_delta = []

@@ -3,7 +3,7 @@ from pathlib import Path
 from email.mime.text import MIMEText
 
 
-def send_email(time, qty, last_feed, avg_feed, daily_tot, daily_freq):
+def send_email(name, sender, time, qty, last_feed, avg_feed, daily_tot, daily_freq):
     folder = Path(__file__).parents[2]
     folder = str(folder)
 
@@ -48,8 +48,8 @@ def send_email(time, qty, last_feed, avg_feed, daily_tot, daily_freq):
     body_text = body_text + "\n\nAvg time between feeds\n{daily_freq}".format(daily_freq=daily_freq_adj)
 
     msg = MIMEText(body_text, "plain")
-    msg['Subject'] = "Corwin's Feed Schedule"
-    msg['From'] = "Tyler England"
+    msg['Subject'] = name + "'s Feed Schedule"
+    msg['From'] = sender
     msg['To'] = ",".join(recips)
 
     port = 465  # For SSL

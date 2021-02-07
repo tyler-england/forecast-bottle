@@ -1,0 +1,9 @@
+Birthday: YYYY-MM-DD
+
+Weeks, min feed (mL), max feed (mL), min feed freq (hrs), max feed freq (hrs)
+
+0-4, 60, 90
+5-8, 60, 120, 2, 3
+9-24, 90, 120, 2, 3
+25-28, 120, 150, 2, 3
+29-52,120, 180, 3, 4
