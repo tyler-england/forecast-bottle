@@ -16,5 +16,5 @@ token*
 # Misc info
 recipients.txt
 *log.txt
-*info.txt
+age_info.txt
 check_time.txt
