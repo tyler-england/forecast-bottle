@@ -163,7 +163,7 @@ def get_time_qty_summary(data):
 
     avg_time_prop = (delta_adj[0] + delta_adj[1] + delta_adj[2]) / len(delta_adj)  # avg time until next feed is started
     time_next = info_last + avg_time_prop
-    time_max = info_last + timedelta(0, 0, 0, 0, 45, 3)  # 4 hours max between feedings
+    time_max = info_last + timedelta(minutes=45, hours=3)  # 4 hours max between feedings
     if time_next > time_max:
         time_next = time_max
 
@@ -201,13 +201,13 @@ def get_time_qty_summary(data):
                 x = 0
                 while (time_next - info_last).seconds // 3600 < freqs[
                     0]:  # increase time_next until hrs eclipse minimum diff
-                    time_next = time_next + timedelta(0, 0, 0, 0, 15)
+                    time_next = time_next + timedelta(minutes=15)
                     x += 1
                     if x > 100:
                         break
                 while (time_next - info_last).seconds / 3600 > freqs[
                     1]:  # decrease time_next until hrs are under maximum diff
-                    time_next = time_next - timedelta(0, 0, 0, 0, 15)
+                    time_next = time_next - timedelta(minutes=15)
                     x += 1
                     if x > 200:
                         break
