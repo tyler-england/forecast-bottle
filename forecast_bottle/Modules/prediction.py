@@ -48,6 +48,7 @@ def get_time_qty_summary(data):
                 cols.append([ddate, ttime, mls, bfs])
 
     df = pd.DataFrame(cols, columns=["Date", "Time", "mLs", "BF Mins"], dtype=float)
+    df = df.sort_values(by=["Date", "Time"]).reset_index(drop=True)  # so Keep note can be organized however is easiest
 
     # find out how much 1 min BF is
     dates = []
