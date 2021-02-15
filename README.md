@@ -43,6 +43,7 @@ credentials.txt -- The Gmail credentials are used to access the Google account w
 recipients.txt -- These are the email addresses of everyone who will receive updates when the next feed time has been estimated.
 
 
+
 Some script values are hard-coded because I created this project for my own use. They should be changed before running the program.
 
 email_forecast.py, lines 38/39: Change baby's name and the sender name for all outgoing emails.
