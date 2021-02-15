@@ -1,6 +1,7 @@
 import pandas as pd
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from dateutil.relativedelta import relativedelta
 
 
 def get_time_qty_summary(data):
@@ -31,6 +32,8 @@ def get_time_qty_summary(data):
                         except Exception:
                             dtime = 0
             if not dtime == 0:
+                if dtime > today:  # the year should likely be last year
+                    dtime=dtime-relativedelta(years=1)
                 ddate = str(dtime.date())
                 ttime = str(dtime.time())
                 if y > 0:
