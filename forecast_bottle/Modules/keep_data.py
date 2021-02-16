@@ -27,8 +27,8 @@ def get_content(name):
     keep = gkeepapi.Keep()
     try:
         keep.login(un, pw)
-    except Exception:
-        return "Error: Login failed... Check username / password"
+    except Exception:\
+        return "Error: Login failed... Check username / password "  # + str(un) + " " + str(pw)
 
     note_id = "18i006fRpqyTZ10dTkSfMed5zAGLJ7YL_j5bo4pG9sajuHO1EywLX5jeTB2il7K-LlZyF"  # change as necessary
 
@@ -44,7 +44,7 @@ def get_content(name):
         with open(backup, "r+") as datadoc:
             data_ex = [line.rstrip() for line in datadoc]
             for item in data_ex:
-                if item.find(name)>-1 or item=="":
+                if item.find(name) > -1 or item == "":
                     pass
                 elif item in content or item.find("--") > -1:  # transfer as is
                     data_new.append(item)
@@ -56,7 +56,7 @@ def get_content(name):
             i = len(data_new)
             if i > 0:  # add to the data doc
                 datadoc.truncate(0)
-                datadoc.write(name+"'s Feed History\n")
+                datadoc.write(name + "'s Feed History\n")
                 for j in range(i):
                     datadoc.write("\n" + data_new[j])
     except Exception:
