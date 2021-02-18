@@ -27,7 +27,7 @@ def get_content(name):
     keep = gkeepapi.Keep()
     try:
         keep.login(un, pw)
-    except Exception:\
+    except:
         return "Error: Login failed... Check username / password "  # + str(un) + " " + str(pw)
 
     note_id = "18i006fRpqyTZ10dTkSfMed5zAGLJ7YL_j5bo4pG9sajuHO1EywLX5jeTB2il7K-LlZyF"  # change as necessary

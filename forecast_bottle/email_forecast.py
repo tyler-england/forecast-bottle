@@ -61,7 +61,7 @@ try:
                 if dt_chk < time:
                     dt_chk = time + datetime.timedelta(minutes=30)  # check again 30 min after feed
                 else:
-                    dt_chk = dt_chk + datetime.timedelta(minutes=15)  # check again in 15 min
+                    dt_chk = dt_chk + datetime.timedelta(minutes=30)  # check again in 30 min
                 update_chktime(chktime, dt_chk, fmt)
                 quit()
         loglines.append(chkstr)
