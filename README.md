@@ -28,7 +28,9 @@ The program can be run manually, but scheduling it to run frequently will ensure
 
 REQUIREMENTS:
 
-gkeepapi, pandas
+Just run `pip install -r requirements.txt` and let Python do its thing.
+
+~~gkeepapi, pandas~~
 
 Note -- gkeepapi is unofficial, and is not supported by Google. https://github.com/kiwiz/gkeepapi
 
