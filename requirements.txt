@@ -1,0 +1,7 @@
+# install these via singular `pip install -r requirements.txt` (`pip install --help` for more information)
+# to get their versions, I simply `pip install`-ed them and then `pip freeze | Select-String -Pattern <PACKAGE NAME>` to find their currently installed versions
+google-api-python-client==1.12.8
+google-auth-httplib2==0.0.4
+google-auth-oauthlib==0.4.2
+gkeepapi==0.13.4
+pandas==1.2.2
