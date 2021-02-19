@@ -50,6 +50,8 @@ if time < datetime.datetime.now():  # no longer useful to notify
     quit()
 
 log = str(Path(__file__).parents[1]) + "/prediction_log.txt"  # if already logged, don't send
+if not Path(log).exists():
+    with open(log, "w"): pass
 loglines = []
 try:
     with open(log, "r+") as logdoc:

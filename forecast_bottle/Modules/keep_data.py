@@ -34,32 +34,31 @@ def get_content(name):
 
     note = keep.get(note_id)
     content = note.text
-    content = content.split("\n")[2:]  # remove header, organize as list
+    content = content.split("\n")#[2:]  # organize as list
     content = [i.strip() for i in content]
 
     # back up data in case of Keep clearout
     backup = str(Path(__file__).parents[2]) + "/data_log.txt"  # data backup
+    if not Path(backup).exists():
+        with open(backup, "w"): pass
     data_new = []
-    try:
-        with open(backup, "r+") as datadoc:
-            data_ex = [line.rstrip() for line in datadoc]
-            for item in data_ex:
-                if item.find(name) > -1 or item == "":
-                    pass
-                elif item in content or item.find("--") > -1:  # transfer as is
-                    data_new.append(item)
-                else:  # transfer with -- to show that it's been deleted from Keep doc
-                    data_new.append("--" + item)
-            for item in content:
-                if item not in data_ex:
-                    data_new.append(item)
-            i = len(data_new)
-            if i > 0:  # add to the data doc
-                datadoc.truncate(0)
-                datadoc.write(name + "'s Feed History\n")
-                for j in range(i):
-                    datadoc.write("\n" + data_new[j])
-    except Exception:
-        print("Error: Unable to backup data to log (" + backup + ")")
+    with open(backup, "r+") as datadoc:
+        data_ex = [line.rstrip() for line in datadoc]
+        for item in data_ex:
+            if item.find(name) > -1 or item == "":
+                pass
+            elif item in content or item.find("--") > -1:  # transfer as is
+                data_new.append(item)
+            else:  # transfer with -- to show that it's been deleted from Keep doc
+                data_new.append("--" + item)
+        for item in content:
+            if item not in data_ex:
+                data_new.append(item)
+        i = len(data_new)
+        if i > 0:  # add to the data doc
+            datadoc.truncate(0)
+            datadoc.write(name + "'s Feed History\n")
+            for j in range(i):
+                datadoc.write("\n" + data_new[j])
 
     return content
