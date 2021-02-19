@@ -34,7 +34,7 @@ def get_content(name):
 
     note = keep.get(note_id)
     content = note.text
-    content = content.split("\n")#[2:]  # organize as list
+    content = content.split("\n")  # organize as list
     content = [i.strip() for i in content]
 
     # back up data in case of Keep clearout
