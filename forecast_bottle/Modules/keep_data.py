@@ -1,4 +1,4 @@
-import gkeepapi, keyring, os, logging, json, yaml
+import gkeepapi, keyring
 from pathlib import Path
 
 
