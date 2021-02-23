@@ -40,6 +40,7 @@ sender = "Tyler England"  # change as needed
 
 data = keep_data.get_content(name)  # get historical feed data from Google Keep
 if isinstance(data,str):  # Google refusing to allow access to Keep note
+    print(data)
     print("Trouble fetching Keep data")
     quit()
 
