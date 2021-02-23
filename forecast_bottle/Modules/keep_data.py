@@ -1,4 +1,4 @@
-import gkeepapi
+import gkeepapi, keyring, os, logging, json, yaml
 from pathlib import Path
 
 
@@ -14,6 +14,8 @@ def get_content(name):
 
     info = [line.rstrip() for line in logindoc]
 
+    un = ""
+    pw = ""
     for i in range(len(info)):
         if info[i].lower() == "keep":
             x = info[i + 1].find(":") + 1
@@ -25,10 +27,20 @@ def get_content(name):
         return "Error: Issue with username and/or password"
 
     keep = gkeepapi.Keep()
-    try:
-        keep.login(un, pw)
+
+    try:  # token login
+        token = keyring.get_password("google-keep-token", un)
+        state = None
+        keep.resume(un, token, state=state)
     except:
-        return "Error: Login failed... Check username / password "  # + str(un) + " " + str(pw)
+        try:
+            print("using pw")
+            keep.login(un, pw)
+            del pw
+            token = keep.getMasterToken()
+            keyring.set_password("google-keep-token", un, token)
+        except:
+            return "Error: Login failed... Check username / password"
 
     note_id = "18i006fRpqyTZ10dTkSfMed5zAGLJ7YL_j5bo4pG9sajuHO1EywLX5jeTB2il7K-LlZyF"  # change as necessary
 

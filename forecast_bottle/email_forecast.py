@@ -11,7 +11,6 @@ def update_chktime(filepath, dt_chk, fmt):
         print("Error: unable to update the next 'check' time in " + filepath)
     return
 
-
 chktime = str(Path(__file__).parents[1]) + "/check_time.txt"
 fmt = "%Y-%m-%d %H:%M:%S"
 try:
@@ -33,12 +32,16 @@ except Exception:  # something wrong with the datetime(missing, etc.)
         dt_chk = datetime.datetime.min
 
 if not b_cont:  # retry later
+    print("Aborting due to check_time.txt")
     quit()
 
 name = "Corwin"  # change baby's name as needed
 sender = "Tyler England"  # change as needed
 
 data = keep_data.get_content(name)  # get historical feed data from Google Keep
+if isinstance(data,str):  # Google refusing to allow access to Keep note
+    print("Trouble fetching Keep data")
+    quit()
 
 time, qty, last_feed, avg_feed, daily_tot, daily_freq = prediction.get_time_qty_summary(data)
 
