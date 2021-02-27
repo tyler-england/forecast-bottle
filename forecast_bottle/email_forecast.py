@@ -76,8 +76,6 @@ except Exception:
     quit()
 
 x = gmail.send_email(name, sender, time, qty, last_feed, avg_feed, daily_tot, daily_freq)  # create & send email
-dt_chk = time - datetime.timedelta(minutes=30)  # check for updates 30 min before next feed
-update_chktime(chktime, dt_chk, fmt)
 if x is None:
     if loglines:  # add to log
         with open(log, "w+") as logdoc:
@@ -85,5 +83,7 @@ if x is None:
                 logdoc.write(loglines[i] + "\n")
     else:
         print("Email sent successfully, but prediction log could not be updated")
+    dt_chk = time - datetime.timedelta(minutes=30)  # check for updates 30 min before next feed
+    update_chktime(chktime, dt_chk, fmt)
 else:
     print(x)

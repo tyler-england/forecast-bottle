@@ -33,7 +33,7 @@ def get_time_qty_summary(data):
                             dtime = 0
             if not dtime == 0:
                 if dtime > today:  # the year should likely be last year
-                    dtime=dtime-relativedelta(years=1)
+                    dtime = dtime - relativedelta(years=1)
                 ddate = str(dtime.date())
                 ttime = str(dtime.time())
                 if y > 0:
@@ -78,7 +78,7 @@ def get_time_qty_summary(data):
             mls_daily.append(x)
             bfs_daily.append(y)
 
-    bf_est = 5.3
+    bf_est = 2
     if len(mls_daily) < 2:  # can't interpolate -> assume breast output rate
         bf_ml_per_min = bf_est
     else:  # set them equal & approximate the BF content
@@ -99,7 +99,7 @@ def get_time_qty_summary(data):
             bf_ml_per_min = 0
         else:
             bf_ml_per_min = sum(ls_avg) / len(ls_avg)
-    if bf_ml_per_min < 0:  # something went wrong -- should only happen if daily intake is wildly off for one day
+    if bf_ml_per_min < 0 or bf_ml_per_min > 10:  # something went wrong
         bf_ml_per_min = bf_est
     mls_tot = []  # for calculating total daily intake
     for i in range(len(mls_daily)):
