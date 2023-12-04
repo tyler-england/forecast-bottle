@@ -39,6 +39,6 @@ Note -- gkeepapi is unofficial, and is not supported by Google. https://github.c
 
 **Some script values are hard-coded because I created this project for my own use. They should be changed before running the program.**
 
-[`email_forecast.py`](./forecast_bottle/email_forecast.py), lines 38/39: Change baby's name and the sender name for all outgoing emails.
+[`email_forecast.py`](./forecast_bottle/email_forecast.py), lines 5/6: Change baby's name and the sender name for all outgoing emails.
 
-[`keep_data.py`](./forecast_bottle/Modules/keep_data.py), line 33: Change note_id to match the ID of the Google Keep note containing the logged feed data.
+[`keep_data.py`](./forecast_bottle/Modules/keep_data.py), line 62: Change note_id to match the ID of the Google Keep note containing the logged feed data.
