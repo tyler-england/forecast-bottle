@@ -22,7 +22,7 @@ def get_time_qty_summary(data_list):
             except:
                 year = today.year
                 try:
-                    if day.lower()[3] == 'Dec' and today.month == 1:
+                    if day.lower()[:3] == 'dec' and today.month == 1:
                         year = year - 1
                     strtime = f'{day} {year} - {info}'.lower()
                 except:
