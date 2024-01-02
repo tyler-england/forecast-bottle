@@ -22,7 +22,7 @@ def get_time_qty_summary(data_list):
             except:
                 year = today.year
                 try:
-                    if day.lower()[:3] == 'dec' and today.month == 1:
+                    if datetime.strptime(day + ' ' + str(year), '%b %d %Y') > today:
                         year = year - 1
                     strtime = f'{day} {year} - {info}'.lower()
                 except:
@@ -73,6 +73,10 @@ def get_time_qty_summary(data_list):
         cols, columns=['Date', 'Time', 'mLs', 'BF Mins'])
     # so Keep note can be organized however is easiest
     df = df.sort_values(by=['Date', 'Time']).reset_index(drop=True)
+
+    df['dt'] = pd.to_datetime(df['Date'])
+    df = df[df['dt'] > (today - timedelta(days=30))]
+    df = df.drop(columns='dt')
 
     # find out how much 1 min BF is
     dates = []
@@ -157,8 +161,9 @@ def get_time_qty_summary(data_list):
     last_few_days = df.set_index('Date').truncate(
         before=dtarget1, after=dtarget2)  # crop df to relevant rows
     # mLs consumed at latest feed
-    mls_target = last_few_days.tail(
-        1).iloc[0, 1] + last_few_days.tail(1).iloc[0, 3]
+    mls_target = last_few_days.tail(1).iloc[0, 1] + last_few_days.tail(1).iloc[0, 3]
+    if mls_target == 0:  # current 'lastest feed' line is unfinished?
+        mls_target = last_few_days.tail(2).iloc[0, 1] + last_few_days.tail(2).iloc[0, 3]
     last_few_days = last_few_days.reset_index()
     # check past days at similar time
     last_few_days['tdiff'] = abs(pd.to_datetime(
