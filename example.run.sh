@@ -1,6 +1,9 @@
-# build environment and activate
-/Users/.../build-env.sh
-source /Users/.../venv/bin/activate
+#!/bin/bash
+PROJECT=/Users/.../path/to/forecast-bottle
 
-# run project file(s)
-python /Users/.../email_forecast.py
+# Build environment and activate
+"$PROJECT/build-env.sh"
+source "$PROJECT/venv/bin/activate"
+
+# Run
+python "$PROJECT/forecast_bottle/email_forecast.py"

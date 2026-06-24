@@ -1,5 +1,6 @@
 # install these via singular `pip install -r requirements.txt` (`pip install --help` for more information)
 # to get their versions, I simply `pip install`-ed them and then `pip freeze | Select-String -Pattern <PACKAGE NAME>` to find their currently installed versions
-gkeepapi==0.13.4
+google-auth
+google-api-python-client
 pandas
 requests==2.28.2

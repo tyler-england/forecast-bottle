@@ -1,69 +1,139 @@
+"""
+gmail.py
+
+Composes and sends the feed-prediction email via Gmail SMTP.
+"""
+
+from __future__ import annotations
+
 import smtplib
 import ssl
-from pathlib import Path
 from email.mime.text import MIMEText
+from pathlib import Path
+from typing import Optional
+
+from .prediction import FeedPrediction
 
 
-def send_email(name, sender, time, qty, last_feed, avg_feed, daily_tot, daily_freq):
-    folder = Path(__file__).resolve().parents[2]
-    # credentials doc (change as necessary)
-    creds_path = str(folder) + '/credentials.txt'
+# ---------------------------------------------------------------------------
+# Credentials helper (shared format with keep_data)
+# ---------------------------------------------------------------------------
+
+def _read_credentials(creds_path: str) -> dict[str, dict[str, str]]:
+    creds: dict[str, dict[str, str]] = {}
+    current_section: Optional[str] = None
 
     try:
-        creds_doc = open(creds_path, 'r')
-    except Exception:
-        return 'Error: Unable to open credentials doc (' + creds_path + ')'
-    info = [line.rstrip() for line in creds_doc]
+        lines = Path(creds_path).read_text().splitlines()
+    except OSError as exc:
+        raise OSError(f"Unable to open credentials file: {creds_path}") from exc
 
-    recips_path = str(folder) + '/recipients.txt'  # change as necessary
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        if ":" not in line:
+            current_section = line.lower()
+            creds.setdefault(current_section, {})
+        elif current_section is not None:
+            key, _, value = line.partition(":")
+            creds[current_section][key.strip().lower()] = value.strip()
+
+    return creds
+
+
+# ---------------------------------------------------------------------------
+# Email body
+# ---------------------------------------------------------------------------
+
+def _build_body(name: str, pred: FeedPrediction, qty_label: str) -> str:
+    time_next = pred.time_next.strftime("%b %d, %I:%M %p")
+    time_last = pred.time_last.strftime("%b %d, %I:%M %p")
+    daily_tot = int(pred.avg_daily_ml)
+
+    # Format avg interval as "Xhr  Ymin  Zsec"
+    total_secs = int(pred.avg_feed_interval.total_seconds())
+    hrs, remainder = divmod(total_secs, 3600)
+    mins, secs = divmod(remainder, 60)
+    freq_str = f"{hrs} hrs  {mins:02d} min  {secs:02d} sec"
+
+    lines = [
+        "ESTIMATES",
+        "",
+        f"Next feed:  {time_next}",
+        f"Amount:     {qty_label}",
+        "",
+        "",
+        "PAST DATA",
+        "",
+        f"Last feed:          {time_last}",
+        f"Avg daily intake:   {daily_tot} mL",
+        f"Avg per feed:       {pred.avg_feed_ml} mL",
+        f"Avg time between:   {freq_str}",
+    ]
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------------------
+# Public interface
+# ---------------------------------------------------------------------------
+
+def send_email(
+    name: str,
+    sender: str,
+    pred: FeedPrediction,
+    qty_label: str,
+    creds_path: str,
+    recipients_path: str,
+) -> None:
+    """
+    Send the prediction email.
+
+    Parameters
+    ----------
+    name:             Baby's name (used in the subject line).
+    sender:           Display name for the From field.
+    pred:             FeedPrediction dataclass from prediction.py.
+    qty_label:        Formatted quantity string, e.g. "80mL (40 mins BF)".
+    creds_path:       Path to credentials.txt.
+    recipients_path:  Path to recipients.txt.
+
+    Raises
+    ------
+    OSError       If credential or recipient files cannot be read.
+    ValueError    If Gmail credentials are missing.
+    smtplib.SMTPException  If the email cannot be sent.
+    """
+    creds = _read_credentials(creds_path)
+    if "gmail" not in creds:
+        raise ValueError("No 'gmail' section found in credentials file.")
+
+    gmail_creds = creds["gmail"]
+    username = gmail_creds.get("username", "")
+    password = gmail_creds.get("password", "")
+    if not username or not password:
+        raise ValueError("Gmail username or password is missing from credentials.")
+
     try:
-        recips_doc = open(recips_path, 'r')
-    except Exception:
-        return 'Error: Unable to find recipients for the email (' + recips_path + ')'
-    recips = [line.rstrip() for line in recips_doc]
+        recipients = [
+            line.strip()
+            for line in Path(recipients_path).read_text().splitlines()
+            if line.strip()
+        ]
+    except OSError as exc:
+        raise OSError(f"Unable to read recipients file: {recipients_path}") from exc
 
-    for i in range(len(info)):
-        if info[i].lower() == 'gmail':
-            start = info[i + 1].find(':') + 1
-            un = info[i + 1][start:]  # get username
-            start = info[i + 2].find(':') + 1
-            pw = info[i + 2][start:]  # get password
-            break
-    if un == '' or pw == '':
-        return 'Error: username/password info missing'
+    if not recipients:
+        raise ValueError("No recipients found in recipients file.")
 
-    time_adj = time.strftime('%b %d, %I:%M %p')
-    last_feed_adj = last_feed.strftime('%b %d, %I:%M %p')
-    daily_tot_adj = int(daily_tot)
-    t_delta = str(daily_freq).split(':')
-    if t_delta[2].find('.') > 0:
-        x = t_delta[2].find('.')
-        t_delta[2] = t_delta[2][:x]
-    daily_freq_adj = t_delta[0] + ' hrs  ' + \
-                     t_delta[1] + ' min  ' + t_delta[2] + ' sec'
-    body_text = 'ESTIMATES'
-    body_text = body_text + f'\n\nNext feed: {time_adj}'
-    body_text = body_text + f'\n\nAmount: {qty}'
-    body_text = body_text + '\n\n\nPAST DATA'
-    body_text = body_text + \
-                f'\n\nLast feed\n{last_feed_adj}'
-    body_text = body_text + \
-                f'\n\nAvg milk amounts\nday: {daily_tot_adj} mL  |  feed: {avg_feed} mL'
-    body_text = body_text + f'\n\nAvg time between feeds\n{daily_freq_adj}'
+    body = _build_body(name, pred, qty_label)
 
-    msg = MIMEText(body_text, 'plain')
-    msg['Subject'] = f'{name}\'s Feed Schedule'
-    msg['From'] = sender
-    msg['To'] = ','.join(recips)
+    msg = MIMEText(body, "plain")
+    msg["Subject"] = f"{name}'s Feed Schedule"
+    msg["From"] = sender
+    msg["To"] = ", ".join(recipients)
 
-    port = 465  # For SSL
-    smtp_server = 'smtp.gmail.com'
     context = ssl.create_default_context()
-    try:
-        with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
-            server.login(un, pw)
-            server.sendmail(un, recips, msg.as_string())
-        return
-    except Exception as e:
-        ret = 'Error: Unable to send email:\n' + str(e)
-        return ret
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        server.login(username, password)
+        server.sendmail(username, recipients, msg.as_string())
